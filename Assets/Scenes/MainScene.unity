@@ -222,7 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 483068ae9490a1940a0f23423c2818c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 0.5
+  duration: 0
   doorSFX: {fileID: 1678587099}
   lightSFX: {fileID: 1931305674}
 --- !u!114 &182031927
