@@ -13,7 +13,14 @@ public class ClickObject : MonoBehaviour
     [SerializeField] Transform objectTarget;
     [SerializeField] float moveDuration = 1f;
 
-    public bool canClick = true;
+    public bool holdingObject = false;
+
+    private Vector3 objectOriginalPosition;
+    private Vector3 objectOriginalRotation;
+
+    [SerializeField] Image blackScreen;
+    [SerializeField] AudioSource doorSFX;
+    [SerializeField] AudioSource lightSFX;
 
     void Start()
     {
@@ -24,9 +31,8 @@ public class ClickObject : MonoBehaviour
     
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && playerController.canMove)
+        if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log("clicked and can move");
 
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -35,24 +41,75 @@ public class ClickObject : MonoBehaviour
             {
                 if (hit.transform.gameObject.CompareTag("Clickable"))
                 {
-                    Debug.Log("clicked a clickable");
-                    StartCoroutine(MoveObject(hit.transform));
+                    if (playerController.canMove)
+                    {
+                        StartCoroutine(GrabObject(hit.transform));
+                    }
 
+                    if (holdingObject)
+                    {
+                        Debug.Log("clicking");
+                        StartCoroutine(PlaceObject(hit.transform));
+                    }
+                    
+
+                }
+
+                if (hit.transform.gameObject.CompareTag("Door"))
+                {
+                    playerController.canMove = false;
+                    StartCoroutine(ExitGame());
                 }
             }
         }
     }
 
-    IEnumerator MoveObject(Transform clickedObj)
+    IEnumerator GrabObject(Transform clickedObj)
     {
+        objectOriginalPosition = clickedObj.position;
+        objectOriginalRotation = clickedObj.rotation.eulerAngles;
+
         playerController.canMove = false;
         clickedObj.DOMove(objectTarget.position, moveDuration);
         clickedObj.DOLookAt(cam.gameObject.transform.position, moveDuration);
-        clickedObj.SetParent(objectTarget);
+        //clickedObj.SetParent(objectTarget);
 
         yield return new WaitForSeconds(moveDuration);
 
+        holdingObject = true;
+
+        yield return null;
+    }
+
+    IEnumerator PlaceObject(Transform clickedObj)
+    {
+        clickedObj.DOMove(objectOriginalPosition, moveDuration);
+        clickedObj.DORotate(objectOriginalRotation, moveDuration);
+
+        yield return new WaitForSeconds(moveDuration);
+
+        holdingObject = false;
         playerController.canMove = true;
+
+        yield return null;
+    }
+
+    IEnumerator ExitGame()
+    {
+        blackScreen.DOFade(1, 0);
+        lightSFX.Play();
+
+        yield return new WaitForSeconds(1f);
+
+        doorSFX.Play();
+
+        yield return new WaitForSeconds(4f);
+
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
 
         yield return null;
     }

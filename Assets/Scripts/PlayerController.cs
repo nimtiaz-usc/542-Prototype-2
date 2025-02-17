@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
 
     CharacterController characterController;
 
+    [SerializeField] AudioSource footstepSFX;
+
     private void Start()
     {
         cam = Camera.main;
@@ -45,6 +47,15 @@ public class PlayerController : MonoBehaviour
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
             cam.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+
+            footstepSFX.enabled = true;
+            footstepSFX.volume = Mathf.Max(Mathf.Abs(Input.GetAxis("Vertical")), Mathf.Abs(Input.GetAxis("Horizontal")));
+        }
+
+        if (Input.GetAxis("Vertical") == 0 && Input.GetAxis("Horizontal") == 0)
+        {
+            footstepSFX.enabled = false;
+            footstepSFX.volume = 0;
         }
 
     }

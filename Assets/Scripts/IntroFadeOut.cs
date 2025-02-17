@@ -9,6 +9,8 @@ public class IntroFadeOut : MonoBehaviour
     [SerializeField] float duration = 1f;
     [SerializeField] AudioSource doorSFX;
     [SerializeField] AudioSource lightSFX;
+    [SerializeField] AudioSource BGM;
+    [SerializeField] PlayerController playerController;
     void Start()
     {
         StartCoroutine(Fade());
@@ -16,9 +18,12 @@ public class IntroFadeOut : MonoBehaviour
 
     IEnumerator Fade() {
         doorSFX.Play();
-        yield return new WaitForSeconds(4f);
+        yield return new WaitForSeconds(3f);
+        BGM.Play();
+        yield return new WaitForSeconds(1f);
         lightSFX.Play();
         GetComponent<Image>().DOFade(0, duration).SetEase(Ease.OutQuart);
+        playerController.canMove = true;
         yield return null;
     }
 }
