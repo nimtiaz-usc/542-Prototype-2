@@ -6,4 +6,5 @@ public class ClickableObject : MonoBehaviour
 {
     public AudioSource farAudio;
     public AudioSource[] nearAudio;
+    public GameObject sparkles;
 }

@@ -15,10 +15,14 @@ public class ClickObject : MonoBehaviour
     [SerializeField] float moveDuration = 1f;
     public LayerMask layerMask;
 
+    public AudioSource chime;
+
     public bool holdingObject = false;
 
-    private Vector3 objectOriginalPosition;
-    private Vector3 objectOriginalRotation;
+    private int collectedCount = 0;
+
+    //private Vector3 objectOriginalPosition;
+    //private Vector3 objectOriginalRotation;
 
     [SerializeField] Image vignette;
     [SerializeField] Image[] cursor;
@@ -73,8 +77,8 @@ public class ClickObject : MonoBehaviour
 
     IEnumerator GrabObject(Transform clickedObj)
     {
-        objectOriginalPosition = clickedObj.position;
-        objectOriginalRotation = clickedObj.rotation.eulerAngles;
+        //objectOriginalPosition = clickedObj.position;
+        //objectOriginalRotation = clickedObj.rotation.eulerAngles;
 
         playerController.canMove = false;
         clickedObj.DOMove(objectTarget.position, moveDuration);
@@ -114,13 +118,18 @@ public class ClickObject : MonoBehaviour
 
         yield return new WaitForSeconds(moveDuration);
 
+        chime.Play();
+
+        Destroy(clickedObj.GetComponent<ClickableObject>().sparkles);
         Destroy(clickedObj.gameObject);
 
         foreach (Image ui in cursor)
         {
             ui.DOFade(1, 0);
         }
+        collectedCount++;
         counter.DOFade(1, 0);
+        counter.text = "Collected: " + collectedCount + "/6";
 
         yield return new WaitForSeconds(1f);
 
@@ -131,7 +140,7 @@ public class ClickObject : MonoBehaviour
 
         yield return null;
     }
-
+    /*
     IEnumerator PlaceObject(Transform clickedObj)
     {
         clickedObj.DOMove(objectOriginalPosition, moveDuration);
@@ -155,6 +164,7 @@ public class ClickObject : MonoBehaviour
 
         yield return null;
     }
+    */
 
     IEnumerator ExitGame()
     {
