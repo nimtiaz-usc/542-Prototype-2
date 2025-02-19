@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using TMPro;
 
 public class ClickObject : MonoBehaviour
 {
@@ -12,11 +13,17 @@ public class ClickObject : MonoBehaviour
     [SerializeField] float clickRange = 10f;
     [SerializeField] Transform objectTarget;
     [SerializeField] float moveDuration = 1f;
+    public LayerMask layerMask;
 
     public bool holdingObject = false;
 
     private Vector3 objectOriginalPosition;
     private Vector3 objectOriginalRotation;
+
+    [SerializeField] Image vignette;
+    [SerializeField] Image[] cursor;
+    [SerializeField] Image whiteScreen;
+    [SerializeField] TextMeshProUGUI counter;
 
     [SerializeField] Image blackScreen;
     [SerializeField] AudioSource doorSFX;
@@ -37,7 +44,7 @@ public class ClickObject : MonoBehaviour
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit, clickRange))
+            if (Physics.Raycast(ray, out hit, clickRange, layerMask))
             {
                 if (hit.transform.gameObject.CompareTag("Clickable"))
                 {
@@ -49,7 +56,7 @@ public class ClickObject : MonoBehaviour
                     if (holdingObject)
                     {
                         Debug.Log("clicking");
-                        StartCoroutine(PlaceObject(hit.transform));
+                        StartCoroutine(FinishObject(hit.transform));
                     }
                     
 
@@ -72,7 +79,19 @@ public class ClickObject : MonoBehaviour
         playerController.canMove = false;
         clickedObj.DOMove(objectTarget.position, moveDuration);
         clickedObj.DOLookAt(cam.gameObject.transform.position, moveDuration);
-        //clickedObj.SetParent(objectTarget);
+
+        foreach (Image ui in cursor)
+        {
+            ui.DOFade(0, moveDuration);
+        }
+        counter.DOFade(0, moveDuration);
+        vignette.DOFade(1, moveDuration);
+
+
+        foreach (AudioSource audio in clickedObj.GetComponent<ClickableObject>().nearAudio)
+        {
+            audio.DOFade(1, moveDuration);
+        }
 
         yield return new WaitForSeconds(moveDuration);
 
@@ -81,10 +100,53 @@ public class ClickObject : MonoBehaviour
         yield return null;
     }
 
+    IEnumerator FinishObject(Transform clickedObj)
+    {
+        whiteScreen.DOFade(1, moveDuration);
+
+        vignette.DOFade(0, moveDuration);
+
+        foreach (AudioSource audio in clickedObj.GetComponent<ClickableObject>().nearAudio)
+        {
+            audio.DOFade(0, moveDuration);
+        }
+        clickedObj.GetComponent<ClickableObject>().farAudio.DOFade(0, moveDuration);
+
+        yield return new WaitForSeconds(moveDuration);
+
+        Destroy(clickedObj.gameObject);
+
+        foreach (Image ui in cursor)
+        {
+            ui.DOFade(1, 0);
+        }
+        counter.DOFade(1, 0);
+
+        yield return new WaitForSeconds(1f);
+
+        whiteScreen.DOFade(0, moveDuration);
+
+        holdingObject = false;
+        playerController.canMove = true;
+
+        yield return null;
+    }
+
     IEnumerator PlaceObject(Transform clickedObj)
     {
         clickedObj.DOMove(objectOriginalPosition, moveDuration);
         clickedObj.DORotate(objectOriginalRotation, moveDuration);
+
+        foreach (Image ui in cursor)
+        {
+            ui.DOFade(1, moveDuration);
+        }
+        vignette.DOFade(0, moveDuration);
+
+        foreach (AudioSource audio in clickedObj.GetComponent<ClickableObject>().nearAudio)
+        {
+            audio.DOFade(0, moveDuration);
+        }
 
         yield return new WaitForSeconds(moveDuration);
 
